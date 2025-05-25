@@ -1,6 +1,16 @@
 import asyncpg
+import os
+from dotenv import load_dotenv
 
-DATABASE = 'postgresql://postgres:123456@localhost:5432/support_bot'
+load_dotenv()
+
+PG_USER = os.getenv("PG_USER")
+PG_PASSWORD = os.getenv("PG_PASSWORD")
+PG_DBNAME = os.getenv("PG_DBNAME")
+PG_HOST = os.getenv("PG_HOST", "localhost")
+PG_PORT = int(os.getenv("PG_PORT", 5432))
+
+DATABASE = f"postgresql://{PG_USER}:{PG_PASSWORD}@{PG_HOST}:{PG_PORT}/{PG_DBNAME}"
 
 db_pool: asyncpg.pool.Pool = None
 

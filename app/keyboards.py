@@ -13,6 +13,9 @@ def questions_keyboard(questions):
         [InlineKeyboardButton(text=q['question'], callback_data=f"question_{q['id']}")]
         for q in questions
     ]
+
+    buttons.append([InlineKeyboardButton(text="Нет нужного вопроса", callback_data="another_question")])
+    
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
 

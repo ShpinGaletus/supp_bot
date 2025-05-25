@@ -1,4 +1,4 @@
-from aiogram import Dispatcher, types, F, Router
+from aiogram import F, Router
 from aiogram.types import Message,CallbackQuery
 from aiogram.filters import Command
 
@@ -46,8 +46,7 @@ async def process_question(callback: CallbackQuery):
 async def cmd_help(message: Message):
     await message.answer('Вы нажмали на help')
 
-@router.message()
-async def other_messages(message: Message):
-     await message.reply('Это ты мне сейчас сказал? Извиняйся!')
+#@router.message()
+#async def other_messages(message: Message):
+     #await message.reply('Это ты мне сейчас сказал? Извиняйся!')
 
-#@router.callback_query()
