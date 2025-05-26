@@ -1,5 +1,4 @@
 from aiogram import Router, F
-from dotenv import load_dotenv
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton,
 ReplyKeyboardRemove)
@@ -8,16 +7,13 @@ from aiogram.fsm.storage.base import StorageKey
 
 from collections import deque
 
-from loader import bot, storage
-import os
-import logging
+from loader import bot, storage, OPERATORS
 
-load_dotenv()
+import logging
 
 logger = logging.getLogger(__name__)
 
 router = Router()
-OPERATORS = [int(op.strip()) for op in os.getenv("OPERATORS").split(",")]
 
 class SupportChat(StatesGroup):
     confirm_waiting = State()

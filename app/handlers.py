@@ -5,15 +5,19 @@ from aiogram.filters import Command
 from .database import (get_categories, get_category_name_by_id, get_questions_by_category,\
     get_answer, get_question_by_id)
 from .keyboards import categories_keyboard, questions_keyboard
+from loader import OPERATORS
 router = Router()
 
 @router.message(Command('start'))
 async def cmd_start(message: Message):
-    await message.answer('Вас приветствует КиберБот КиберПоддержки!\n' \
-    'Ниже представлен список популярных категорий вопросов. Просто нажмите нужную вам!')
-    categories = await get_categories()
-    keyboard = categories_keyboard(categories)
-    await message.answer("Популярные категории:", reply_markup=keyboard)
+    if message.from_user.id in OPERATORS:
+        await message.answer('Здравствуйте, оператор!')
+    else:
+        await message.answer('Вас приветствует КиберБот КиберПоддержки!\n' \
+        'Ниже представлен список популярных категорий вопросов. Просто нажмите нужную вам!')
+        categories = await get_categories()
+        keyboard = categories_keyboard(categories)
+        await message.answer("Популярные категории:", reply_markup=keyboard)
 
 @router.callback_query(lambda c: c.data and c.data.startswith("category_"))
 async def process_category(callback: CallbackQuery):
