@@ -10,12 +10,15 @@ from aiogram.types import Message, BotCommand
 from app.handlers import router as handlers_router
 from app.chat import router as chat_router
 from app.database import create_db_pool
+from app.globals import load_roles
 from loader import bot, storage
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 async def main():
     await create_db_pool()
+    await load_roles()
 
     dp = Dispatcher(bot=bot,storage=storage)
     dp.include_router(handlers_router)
