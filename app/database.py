@@ -26,6 +26,41 @@ async def create_db_pool():
     global db_pool
     db_pool = await asyncpg.create_pool(DATABASE)
 
+async def category_exists(name):
+    async with db_pool.acquire() as connection:
+        exists = await connection.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM category WHERE LOWER(name) = LOWER($1))", name
+        )
+        return exists
+    
+async def category_add(name):
+    async with db_pool.acquire() as connection:
+        cat_id = await connection.fetchval(
+            "INSERT INTO category (name) VALUES ($1) RETURNING id", name
+        )
+        return cat_id
+async def category_remove(category_id):
+    async with db_pool.acquire() as connection:
+        await connection.execute('DELETE FROM category WHERE id = $1', category_id)
+
+async def question_add(category_id, question, answer):
+    async with db_pool.acquire() as connection:
+        question_id = await connection.fetchval(
+            "INSERT INTO faq (category_id, question, answer) VALUES ($1, $2, $3) RETURNING id", category_id, question, answer
+        )
+        return question_id
+
+async def question_remove(question_id):
+    async with db_pool.acquire() as connection:
+        await connection.execute('DELETE FROM faq WHERE id = $1', question_id)
+
+async def question_exists(question_text):
+    async with db_pool.acquire() as connection:
+        exists = await connection.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM faq WHERE LOWER(question) = LOWER($1))", question_text
+        )
+        return exists
+
 async def log_user_action(user_id, action_type, category_id=None, faq_id=None):
     action_type_id = ACTION_TYPES[action_type]
     async with db_pool.acquire() as connection:

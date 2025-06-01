@@ -229,8 +229,3 @@ async def chat_message(message: Message, state: FSMContext):
         logger.info(f"Message from user {user_id} sent to operator {operator_id}")
     if chat_start_id:
         await log_chat_message(chat_start_id, sender_type, message.text)
-@router.message()
-async def catch_all_messages(message: Message, state: FSMContext):
-    user_key = StorageKey(bot_id=bot.id, user_id=message.from_user.id, chat_id=message.from_user.id)
-    current_state = await storage.get_state(user_key)
-    logger.info(f"Catch all: message from {message.from_user.id} in state {current_state}")

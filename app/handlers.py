@@ -14,6 +14,8 @@ async def cmd_start(message: Message):
     user_id = message.from_user.id
     if user_id in g.OPERATORS:
         await message.answer('Здравствуйте, оператор!')
+    elif user_id in g.ADMINS:
+        await message.answer('Здравствуйте, администратор!')
     else:
         await message.answer('Вас приветствует КиберБот КиберПоддержки!\n' \
         'Ниже представлен список популярных категорий вопросов. Просто нажмите нужную вам!')
@@ -23,10 +25,10 @@ async def cmd_start(message: Message):
         await message.answer("Популярные категории:", reply_markup=keyboard)
 
 
-@router.callback_query(lambda c: c.data and c.data.startswith("category_"))
+@router.callback_query(F.data.startswith("category_"))
 async def process_category(callback: CallbackQuery):
     user_id = callback.from_user.id
-    category_id = int(callback.data.split("_")[1])
+    category_id = int(callback.data.split("_")[-1])
 
     await log_user_action(user_id, "choose_category", category_id=category_id)
 
@@ -42,10 +44,10 @@ async def process_category(callback: CallbackQuery):
         )
     await callback.answer()
 
-@router.callback_query(lambda c: c.data and c.data.startswith("question_"))
+@router.callback_query(F.data.startswith("question_"))
 async def process_question(callback: CallbackQuery):
     user_id = callback.from_user.id
-    faq_id = int(callback.data.split("_")[1])
+    faq_id = int(callback.data.split("_")[-1])
 
     await log_user_action(user_id, "choose_question", faq_id=faq_id)
 
@@ -63,5 +65,4 @@ async def cmd_help(message: Message):
 
     await log_user_action(user_id, "help")
     await message.answer('Вы нажмали на help')
-
 

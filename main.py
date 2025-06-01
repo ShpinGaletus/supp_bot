@@ -1,16 +1,15 @@
-import os
 import logging
 
 import asyncio
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.types import Message, BotCommand
-
-
+from aiogram import Dispatcher, types, F
+from aiogram.types import BotCommand
 
 from app.handlers import router as handlers_router
 from app.chat import router as chat_router
+from app.admin_handlers import router as admin_router
 from app.database import create_db_pool
 from app.globals import load_roles
+from app.commands import set_users_commands, set_admins_commands, set_operators_commands
 from loader import bot, storage
 
 
@@ -23,13 +22,11 @@ async def main():
     dp = Dispatcher(bot=bot,storage=storage)
     dp.include_router(handlers_router)
     dp.include_router(chat_router)
+    dp.include_router(admin_router)
 
-    commands = [
-        BotCommand(command='start',description='Начать'),
-        BotCommand(command='help',description='Помощь')
-    ]
-    await bot.set_my_commands(commands)
-    
+    await set_users_commands(bot)
+    await set_operators_commands(bot)
+    await set_admins_commands(bot)
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
