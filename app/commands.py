@@ -14,8 +14,6 @@ ADMIN_COMMANDS = [
     BotCommand(command='list', description='Просмотр категорий и вопросов'),
     BotCommand(command='cat_manage', description='Добавление/Удаление категории'),
     BotCommand(command='question_manage', description='Добавление/Удаление вопроса'),    
-    BotCommand(command='question_add', description='Добавить вопрос'),
-    BotCommand(command='question_remove', description='Удалить вопрос'),
     BotCommand(command='cancel', description='Отмена действия')
 
 ]
