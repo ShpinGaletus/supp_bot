@@ -11,10 +11,6 @@ import app.globals as g
 
 from loader import bot, storage
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 router = Router()
 
 class SupportChat(StatesGroup):
@@ -23,18 +19,15 @@ class SupportChat(StatesGroup):
     operator_accept_waiting = State()
     chatting = State()
 
-
 waiting_questions = deque()
 
 async def get_free_operator():
-    operator_queue = deque(g.OPERATORS)
-    for _ in range(len(operator_queue)):
-        operator_id =operator_queue[0]
+    for _ in range(len(g.operator_queue)):
+        operator_id = g.operator_queue[0]
         operator_key = StorageKey(bot_id=bot.id, user_id=operator_id, chat_id=operator_id)
         state = await storage.get_state(operator_key)
-        operator_queue.rotate(-1)
-
         if state != SupportChat.chatting:
+            g.operator_queue.rotate(-1)
             return operator_id
     return None
 
@@ -98,6 +91,7 @@ async def handle_new_question(message: Message, state: FSMContext):
     user_name = message.from_user.full_name or message.from_user.username or str(user_id)
     question_text = message.text
 
+    await log_user_action(user_id, "ask_question", another_question=question_text)
     await state.update_data(user_id=user_id, question=question_text)
 
     operator_id = await get_free_operator()
@@ -139,9 +133,17 @@ async def operator_accept_chat(callback: CallbackQuery, state: FSMContext):
     operator_id = callback.from_user.id
 
     user_key = StorageKey(bot_id=bot.id, user_id=user_id, chat_id=user_id)
+
     current_state = await storage.get_state(user_key)
     if current_state == SupportChat.chatting:
-        await callback.answer('Вы уже принимали этот запрос.', show_alert=True)
+        await callback.answer('Вы уже приняли запрос данного пользователя.', show_alert=True)
+        await callback.message.edit_reply_markup(reply_markup=None)
+        return
+    
+    operator_key = StorageKey(bot_id=bot.id, user_id=operator_id, chat_id=operator_id)
+    current_operator_state = await storage.get_state(operator_key)
+    if current_operator_state == SupportChat.chatting:
+        await callback.answer('Сначала завершите текущий чат.', show_alert=True)
         return
     
     chat_start_id = await log_user_action(user_id, "chat_start")
@@ -149,7 +151,7 @@ async def operator_accept_chat(callback: CallbackQuery, state: FSMContext):
     await storage.update_data(user_key, {'operator_id': operator_id, 'chat_start_id': chat_start_id})
     await storage.set_state(user_key, SupportChat.chatting)
     
-    operator_key = StorageKey(bot_id=bot.id, user_id=operator_id, chat_id=operator_id)
+
     await storage.update_data(operator_key, {'user_id': user_id, 'chat_start_id': chat_start_id})
     await storage.set_state(operator_key, SupportChat.chatting)
 
@@ -168,6 +170,7 @@ async def end_chat_handler(message: Message, state: FSMContext):
     if current_state != SupportChat.chatting:
         await message.answer('Нет чата для завершения')
         return
+    
     user_id = message.from_user.id
     user_key = StorageKey(bot_id=bot.id, user_id=user_id, chat_id=user_id )
     user_data = await storage.get_data(user_key)
@@ -178,7 +181,6 @@ async def end_chat_handler(message: Message, state: FSMContext):
         target_state = FSMContext(storage=storage, key=target_key)
         await target_state.clear()
         await state.clear()
-
         await bot.send_message(target_id, 'Оператор завершил чат', reply_markup=ReplyKeyboardRemove())
         await message.answer('Вы завершили чат', reply_markup=ReplyKeyboardRemove())
     else:
@@ -209,23 +211,18 @@ async def chat_message(message: Message, state: FSMContext):
             return
         
         await bot.send_message(user_id, f'Оператор:\n{message.text}', reply_markup=end_chat_kb)
-        logger.info(f"Operator {operator_id} sent message to user {user_id}")
 
     else:
         sender_type = 'user'
         user_id = message.from_user.id
         user_key = StorageKey(bot_id=bot.id, user_id=user_id, chat_id=user_id)
-        state_for_user = await storage.get_state(user_key)
-
         user_data = await storage.get_data(user_key)
         operator_id = user_data.get('operator_id')
         chat_start_id = user_data.get('chat_start_id')
-        logger.info(f"User {user_id} operator_id from storage: {operator_id}")
+
         if not operator_id:
             await message.answer("Оператор пока не подключился к чату. Пожалуйста, подождите.")
-            logger.warning(f"operator_id missing for user {user_id}")
             return
         await bot.send_message(operator_id, f'Пользователь:\n{message.text}', reply_markup=end_chat_kb)
-        logger.info(f"Message from user {user_id} sent to operator {operator_id}")
     if chat_start_id:
-        await log_chat_message(chat_start_id, sender_type, message.text)
+        await log_chat_message(chat_start_id, sender_type, message.text, operator_id=operator_id)

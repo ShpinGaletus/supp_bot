@@ -15,8 +15,8 @@ ADMIN_COMMANDS = [
     BotCommand(command='cat_manage', description='Добавление/Удаление категории'),
     BotCommand(command='question_manage', description='Добавление/Удаление вопроса'),    
     BotCommand(command='cancel', description='Отмена действия')
-
 ]
+
 async def set_users_commands(bot):
     await bot.set_my_commands(BASE_COMMANDS, scope=BotCommandScopeDefault())
 

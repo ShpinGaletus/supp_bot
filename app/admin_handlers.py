@@ -15,10 +15,8 @@ class AdminStates(StatesGroup):
     cat_name_waiting = State()
     question_add_text_waiting = State()
     question_add_answer_waiting = State() 
-
     question_remove_waiting = State()
   
-
 @router.message(Command('list'))
 async def list_categories(message:Message):
     user_id = message.from_user.id
@@ -74,7 +72,6 @@ async def admin_cat_add(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer('Введите название категории для добавления')
     await state.set_state(AdminStates.cat_name_waiting)
     await callback.answer()
-
 
 @router.message(AdminStates.cat_name_waiting, ~F.text.startswith('/'))
 async def process_cat_name(message: Message, state: FSMContext):

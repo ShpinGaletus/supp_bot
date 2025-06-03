@@ -20,8 +20,10 @@ ACTION_TYPES = {
     "choose_category": 3,
     "choose_question": 4,
     "chat_request": 5,
-    "chat_start": 6
+    "chat_start": 6,
+    "ask_question": 7
 }
+
 async def create_db_pool():
     global db_pool
     db_pool = await asyncpg.create_pool(DATABASE)
@@ -61,28 +63,28 @@ async def question_exists(question_text):
         )
         return exists
 
-async def log_user_action(user_id, action_type, category_id=None, faq_id=None):
+async def log_user_action(user_id, action_type, category_id=None, faq_id=None, another_question=None):
     action_type_id = ACTION_TYPES[action_type]
     async with db_pool.acquire() as connection:
         user_action_id = await connection.fetchval(
             """
-            INSERT INTO user_action(user_id, action_time, action_type_id, category_id, faq_id)
-            VALUES ($1, NOW(), $2, $3, $4)
+            INSERT INTO user_action(user_id, action_time, action_type_id, category_id, faq_id, another_question)
+            VALUES ($1, NOW(), $2, $3, $4, $5)
             RETURNING id
-            """, user_id, action_type_id, category_id, faq_id
+            """, user_id, action_type_id, category_id, faq_id, another_question
         )
         return user_action_id
     
-async def log_chat_message(user_action_id, sender_type, message_text):
+async def log_chat_message(user_action_id, sender_type, message_text, operator_id):
     async with db_pool.acquire() as connection:
         await connection.execute(
             """
-            INSERT INTO chat_message(user_action_id, sender_type, message_text, sent_at)
-            VALUES ($1, $2, $3, NOW())
+            INSERT INTO chat_message(user_action_id, sender_type, message_text, sent_at, operator_id)
+            VALUES ($1, $2, $3, NOW(), $4)
             RETURNING id
-            """, user_action_id, sender_type, message_text
+            """, user_action_id, sender_type, message_text, operator_id
         )
-
+    
 async def get_categories():
     async with db_pool.acquire() as connection:
         return await connection.fetch("SELECT id, name FROM category ORDER BY name")
