@@ -15,8 +15,8 @@ async def main():
 
     dp = Dispatcher(bot=bot,storage=storage)
     dp.include_router(handlers_router)
-    dp.include_router(chat_router)
     dp.include_router(admin_router)
+    dp.include_router(chat_router)
 
     await set_users_commands(bot)
     await set_operators_commands(bot)

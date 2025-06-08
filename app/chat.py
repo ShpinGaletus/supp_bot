@@ -198,6 +198,8 @@ async def end_chat_handler(message: Message, state: FSMContext):
 @router.message(SupportChat.chatting)
 async def chat_message(message: Message, state: FSMContext):
     if message.from_user.id in g.OPERATORS:
+        if message.text.startswith('/'):
+            return
         sender_type = 'operator'
         operator_id = message.from_user.id
         operator_key = StorageKey(bot_id=bot.id, user_id=operator_id, chat_id=operator_id)
